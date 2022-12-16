@@ -12,6 +12,16 @@ add_library(libblobfish
 
         blobfish.hpp
         blobfish.cpp
+
+        util/prelude.hpp
+        util/named_type.hpp
+
+        runtime/prelude.hpp
+        runtime/runtime.hpp
+        runtime/runtime.cpp
+        runtime/runtime_config.hpp
+        runtime/runtime_builder.hpp
+        runtime/runtime_builder.cpp
 )
 
 set_target_properties(libblobfish PROPERTIES PREFIX "")

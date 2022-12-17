@@ -33,6 +33,8 @@ add_library(libblobfish
         runtime/task_tracker/task_tracker.cpp
         runtime/executor_pool/executor_pool.hpp
         runtime/executor_pool/executor_pool.cpp
+        runtime/task/awaitable.hpp
+        runtime/task/awaitable.cpp
 )
 
 target_include_directories(libblobfish PRIVATE .)

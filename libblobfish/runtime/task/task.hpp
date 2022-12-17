@@ -46,9 +46,6 @@ public:
 	template<typename U> friend
 	class Task;
 
-	template<typename U>
-	struct SubTask;
-
 	template<Awaitable A>
 	struct AwaitablePromise;
 

@@ -17,12 +17,24 @@ add_library(libblobfish
         util/named_type.hpp
 
         runtime/prelude.hpp
+        runtime/runtime_defs.hpp
         runtime/runtime.hpp
         runtime/runtime.cpp
         runtime/runtime_config.hpp
         runtime/runtime_builder.hpp
         runtime/runtime_builder.cpp
+        runtime/task/prelude.hpp
+        runtime/task/task_defs.hpp
+        runtime/task/task.hpp
+        runtime/task/task.cpp
+        runtime/task/spawn.hpp
+        runtime/timer/timer.hpp
+        runtime/timer/timer.cpp
+        runtime/waker/waker.hpp
+        runtime/waker/waker.cpp
 )
+
+target_include_directories(libblobfish PRIVATE .)
 
 set_target_properties(libblobfish PROPERTIES PREFIX "")
 target_compile_options(libblobfish PRIVATE "$<$<CONFIG:DEBUG>:${BF_DEBUG_OPTIONS}>")

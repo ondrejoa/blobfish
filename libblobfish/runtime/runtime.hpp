@@ -2,11 +2,16 @@
 
 #include <memory>
 
+#include "runtime_defs.hpp"
 #include "runtime_config.hpp"
+
+#include "task/task_defs.hpp"
+#include "task/task.hpp"
 
 namespace blobfish::runtime {
 
 class RuntimeImpl;
+
 
 class Runtime final {
 	friend class RuntimeBuilder;
@@ -16,6 +21,10 @@ public:
 	int Run();
 
 	static Runtime& Instance();
+
+	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task, Executor executor);
+	void MarkAsReady(task::TaskId id);
+
 private:
 	Runtime();
 	void InitRuntime([[maybe_unused]] RuntimeConfig config);

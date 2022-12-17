@@ -1,5 +1,7 @@
 #pragma once
 
+#include <compare>
+
 namespace blobfish::util {
 
 template<typename UNDERLYING_TYPE, typename TAG>
@@ -24,7 +26,14 @@ struct NamedType {
 		return *this;
 	}
 
+	NamedType(const NamedType&) = default;
+
 	NamedType &operator=(const NamedType&) = default;
+
+	// TODO constrain
+	std::strong_ordering operator<=>(const NamedType& rhs) const {
+		return value <=> rhs.value;
+	}
 };
 
 }

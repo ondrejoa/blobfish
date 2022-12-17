@@ -46,7 +46,6 @@ public:
 	template<typename U> friend
 	class Task;
 
-	// forward declaration
 	template<typename U>
 	struct SubTask;
 
@@ -80,33 +79,16 @@ public:
 
 		std::optional<TaskId> dependent = std::nullopt;
 
-		// forward declaration
-		template<typename U>
-		SubTask<U> await_transform(Task<U> &&);
-
 		template<Awaitable A>
 		AwaitablePromise<A> await_transform(A &&);
 
 		template<AwaitableValue A>
 		AwaitableValuePromise<A> await_transform(A &&);
+
+		template<typename U>
+		AwaitableValuePromise<typename Task<U>::AwaitableTaskValue> await_transform(Task<U>&&);
 	};
 	using coro_handle = typename promise_type::coro_handle;
-
-	template<typename U>
-	struct SubTask {
-		task::TaskId id;
-		std::shared_ptr<std::optional<U>> value;
-
-		bool await_ready() const noexcept { return false; }
-		void await_suspend(coro_handle handle) noexcept {
-			internal::MarkAsReady(id);
-		}
-
-		U await_resume() const noexcept {
-			return **value;
-		}
-
-	};
 
 	template<Awaitable A>
 	struct AwaitablePromise {
@@ -198,9 +180,9 @@ public:
 	};
 
 	template<typename TT = T>
-	requires (!std::same_as<TT, void> && std::same_as<TT, T>)
+	requires(std::same_as<TT, T>)
 	AwaitableTaskValue ToAwaitable() {
-		auto awaitable = AwaitableTaskValue {
+		auto awaitable = AwaitableTaskValue{
 			.handle = handle_,
 			.value = handle_.promise().value,
 		};
@@ -212,20 +194,6 @@ public:
 private:
 	coro_handle handle_;
 };
-
-template<typename T>
-template<typename U>
-typename Task<T>::template SubTask<U> Task<T>::promise_type::await_transform(Task<U> &&task) {
-	auto sub_value = task.handle_.promise().value; // Reference to return value
-	task.handle_.promise().dependent = task_id; // Make this task depend on subtask
-	auto task_ptr = std::shared_ptr<TaskBase>(new Task<U>(std::move(task)));
-	auto id = internal::AddTask(task_ptr);
-	auto subtask = SubTask<U>{
-		.id = id,
-		.value = sub_value,
-	};
-	return subtask;
-}
 
 template<typename T>
 template<Awaitable A>
@@ -241,6 +209,12 @@ typename Task<T>::template AwaitableValuePromise<A> Task<T>::promise_type::await
 	return AwaitableValuePromise<A>{
 		.awaitable = std::forward<A>(a),
 	};
+}
+
+template<typename T>
+template<typename U>
+typename Task<T>::template AwaitableValuePromise<typename Task<U>::AwaitableTaskValue> Task<T>::promise_type::await_transform(Task<U>&& task) {
+	return await_transform(task.template ToAwaitable()); // lol
 }
 
 }

@@ -48,15 +48,14 @@ Task<int> IntProducerTask() {
 	co_return 42;
 }
 
-Task<Void> TestTask() {
+Task<> TestTask() {
 	std::cout << "test message #1" << std::endl;
-	auto i = co_await IntProducerTask().ToAwaitable();
+	auto i = co_await IntProducerTask();
 	std::cout << "received " << i << std::endl;
 	co_return {};
 }
 
-
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
 	RuntimeBuilder{}
 		.Init();
 

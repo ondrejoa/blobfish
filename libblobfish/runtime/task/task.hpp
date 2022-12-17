@@ -6,7 +6,6 @@
 #include <optional>
 #include <memory>
 
-#include "runtime/runtime_defs.hpp"
 #include "task_defs.hpp"
 
 namespace blobfish::runtime {
@@ -28,8 +27,9 @@ public:
 };
 
 namespace internal {
-	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task, Executor executor);
+	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task);
 	void MarkAsReady(task::TaskId id);
+	void MarkForRemove(task::TaskId id);
 }
 
 // void return type
@@ -55,6 +55,7 @@ public:
 			if (dependent) {
 				internal::MarkAsReady(*dependent);
 			}
+			internal::MarkForRemove(task_id);
 			return std::suspend_always{};
 		}
 		void unhandled_exception() {}
@@ -122,13 +123,14 @@ public:
 		}
 	};
 
+	TaskId GetId() const override {
+		return handle_.promise().task_id;
+	}
+
 	void SetId(TaskId id) override {
 		handle_.promise().task_id = id;
 	}
 
-	TaskId GetId() const override {
-		return handle_.promise().task_id;
-	}
 
 	void Resume() override {
 		handle_.resume();
@@ -144,7 +146,7 @@ typename Task<T>::template SubTask<U> Task<T>::promise_type::await_transform(Tas
 	auto sub_value = task.handle_.promise().value; // Reference to return value
 	task.handle_.promise().dependent = task_id; // Make this task depend on subtask
 	auto task_ptr = std::shared_ptr<TaskBase>(new Task<U>(std::move(task)));
-	auto id = internal::AddTask(task_ptr, blobfish::runtime::Executor::Compute); // TODO change executor
+	auto id = internal::AddTask(task_ptr);
 	auto subtask = SubTask<U> {
 		.id = id,
 		.value = sub_value,

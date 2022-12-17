@@ -17,7 +17,6 @@ add_library(libblobfish
         util/named_type.hpp
 
         runtime/prelude.hpp
-        runtime/runtime_defs.hpp
         runtime/runtime.hpp
         runtime/runtime.cpp
         runtime/runtime_config.hpp
@@ -30,8 +29,10 @@ add_library(libblobfish
         runtime/task/spawn.hpp
         runtime/timer/timer.hpp
         runtime/timer/timer.cpp
-        runtime/waker/waker.hpp
-        runtime/waker/waker.cpp
+        runtime/task_tracker/task_tracker.hpp
+        runtime/task_tracker/task_tracker.cpp
+        runtime/executor_pool/executor_pool.hpp
+        runtime/executor_pool/executor_pool.cpp
 )
 
 target_include_directories(libblobfish PRIVATE .)

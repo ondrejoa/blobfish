@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <set>
 #include <iostream>
+#include "runtime/task_tracker/task_tracker.hpp"
+#include "runtime/executor_pool/executor_pool.hpp"
 
 namespace blobfish::runtime {
 
@@ -13,22 +15,16 @@ class RuntimeImpl {
 public:
 	RuntimeImpl(RuntimeConfig config);
 
-	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task, Executor executor);
-	void MarkAsready(task::TaskId id);
+	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task);
+	void MarkAsReady(task::TaskId id);
+	void MarkForRemove(task::TaskId id);
 
 	[[noreturn]] int Run();
 private:
 	const RuntimeConfig config_;
 
-	// TODO: make it maintainable
-	// index corresponds to TaskId
-	std::vector<std::shared_ptr<task::TaskBase>> tasks_;
-
-	// TODO: make it more effective/easier to schedule
-	std::set<task::TaskId> tasks_ready_;
-
-	void ResumeTask(task::TaskId id);
-	void ExecuteReady();
+	task_tracker::TaskTracker tracker_;
+	executor_pool::ExecutorPool executor_pool_;
 };
 
 Runtime::Runtime() {}
@@ -48,57 +44,51 @@ int Runtime::Run() {
 	return pimpl_->Run();
 }
 
-task::TaskId Runtime::AddTask(std::shared_ptr<task::TaskBase> task, Executor executor) {
-	return pimpl_->AddTask(std::move(task), executor);
+task::TaskId Runtime::AddTask(std::shared_ptr<task::TaskBase> task) {
+	return pimpl_->AddTask(std::move(task));
 }
 
 void Runtime::MarkAsReady(task::TaskId id) {
-	pimpl_->MarkAsready(id);
+	pimpl_->MarkAsReady(id);
+}
+
+void Runtime::MarkForRemove(task::TaskId id) {
+	pimpl_->MarkForRemove(id);
 }
 
 // pimpl
 
-RuntimeImpl::RuntimeImpl(blobfish::runtime::RuntimeConfig config): config_{config} {
-	tasks_.reserve(config_.max_coroutines);
-	for (size_t i = 0; i < config_.max_coroutines; ++i) {
-		tasks_.emplace_back(nullptr);
-	}
+RuntimeImpl::RuntimeImpl(blobfish::runtime::RuntimeConfig config):
+	config_{config},
+	tracker_(config.max_coroutines),
+	executor_pool_(config.net_io_threads) // TODO: unify threads
+{
 }
 
-task::TaskId RuntimeImpl::AddTask(std::shared_ptr<task::TaskBase> task, blobfish::runtime::Executor executor) {
-	for (size_t i = 0; i < config_.max_coroutines; ++i) {
-		if (tasks_[i] == nullptr) {
-			// TODO set fields
-			task->SetId(task::TaskId{i});
-			tasks_[i] = task;
-			return task::TaskId {i};
-		}
-	}
-	throw std::runtime_error("task list full");
+task::TaskId RuntimeImpl::AddTask(std::shared_ptr<task::TaskBase> task) {
+	return tracker_.AddTask(task);
 }
 
-void RuntimeImpl::MarkAsready(task::TaskId id) {
-	// TODO protect with lock
-	tasks_ready_.insert(id);
-}
-
-void RuntimeImpl::ResumeTask(task::TaskId id) {
-	// TODO schedule
-	tasks_[size_t(id)]->Resume();
+void RuntimeImpl::MarkAsReady(task::TaskId id) {
+	tracker_.MarkAsReady(id);
 }
 
 int RuntimeImpl::Run() {
 	while (true) {
-		ExecuteReady();
+		if (auto executor = executor_pool_.AqcuireExecutor(); executor) {
+			std::optional<task_tracker::TaskTracker::TaskPtr> task;
+			while (!task) {
+				task = tracker_.NextReady();
+			}
+			executor->RunTask(*task);
+		}
 	}
 	return 0;
 }
 
-void RuntimeImpl::ExecuteReady() {
-	std::set<task::TaskId> tasks_ready = std::move(tasks_ready_);
-	for (auto id: tasks_ready) {
-		ResumeTask(id);
-	}
+
+void RuntimeImpl::MarkForRemove(task::TaskId id) {
+	tracker_.MarkForRemove(id);
 }
 
 }

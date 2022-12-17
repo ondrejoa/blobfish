@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "runtime_defs.hpp"
 #include "runtime_config.hpp"
 
 #include "task/task_defs.hpp"
@@ -22,8 +21,9 @@ public:
 
 	static Runtime& Instance();
 
-	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task, Executor executor);
+	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task);
 	void MarkAsReady(task::TaskId id);
+	void MarkForRemove(task::TaskId id);
 
 private:
 	Runtime();

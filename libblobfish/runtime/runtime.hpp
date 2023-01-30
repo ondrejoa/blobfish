@@ -6,6 +6,8 @@
 
 #include "task/task_defs.hpp"
 #include "task/task.hpp"
+#include "timer/timer.hpp"
+#include "timer/timer_service.hpp"
 
 namespace blobfish::runtime {
 
@@ -24,6 +26,8 @@ public:
 	task::TaskId AddTask(std::shared_ptr<task::TaskBase> task);
 	void MarkAsReady(task::TaskId id);
 	void MarkForRemove(task::TaskId id);
+
+	timer::TimerService& GetTimerService();
 
 private:
 	Runtime();

@@ -1,13 +1,11 @@
 #include "runtime.hpp"
 
-#include <vector>
 #include <memory>
 #include <utility>
-#include <stdexcept>
-#include <set>
 #include <iostream>
 #include "runtime/task_tracker/task_tracker.hpp"
 #include "runtime/executor_pool/executor_pool.hpp"
+#include "runtime/timer/timer.hpp"
 
 namespace blobfish::runtime {
 
@@ -19,12 +17,16 @@ public:
 	void MarkAsReady(task::TaskId id);
 	void MarkForRemove(task::TaskId id);
 
+	timer::TimerService& GetTimerService();
+
 	[[noreturn]] int Run();
 private:
 	const RuntimeConfig config_;
 
 	task_tracker::TaskTracker tracker_;
 	executor_pool::ExecutorPool executor_pool_;
+
+	timer::TimerService timer_service_;
 };
 
 Runtime::Runtime() {}
@@ -54,6 +56,9 @@ void Runtime::MarkAsReady(task::TaskId id) {
 
 void Runtime::MarkForRemove(task::TaskId id) {
 	pimpl_->MarkForRemove(id);
+}
+timer::TimerService &Runtime::GetTimerService() {
+	return pimpl_->GetTimerService();
 }
 
 // pimpl
@@ -89,6 +94,10 @@ int RuntimeImpl::Run() {
 
 void RuntimeImpl::MarkForRemove(task::TaskId id) {
 	tracker_.MarkForRemove(id);
+}
+
+timer::TimerService& RuntimeImpl::GetTimerService() {
+	return timer_service_;
 }
 
 }

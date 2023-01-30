@@ -1,8 +1,13 @@
 #include <iostream>
 
+#include <chrono>
+
 #include "runtime/runtime.hpp"
 #include "runtime/prelude.hpp"
 #include "runtime/task/prelude.hpp"
+#include "runtime/timer/prelude.hpp"
+
+using namespace std::chrono_literals;
 
 struct DummyAwaitable {
 	bool Ready() const noexcept {
@@ -44,6 +49,8 @@ Task<int> IntProducerTask() {
 	co_await DummyAwaitable{};
 	std::cout << "test message #2" << std::endl;
 	int value = co_await DummyAwaitableValue{};
+	std::cout << "Waiting 5s" << std::endl;
+	co_await Timer{5'000ms};
 	std::cout << "dummy value " << value << std::endl;
 	co_return 42;
 }

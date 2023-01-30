@@ -27,8 +27,13 @@ add_library(libblobfish
         runtime/task/task.hpp
         runtime/task/task.cpp
         runtime/task/spawn.hpp
+        runtime/timer/prelude.hpp
         runtime/timer/timer.hpp
         runtime/timer/timer.cpp
+        runtime/timer/timer_impl.hpp
+        runtime/timer/timer_impl.cpp
+        runtime/timer/timer_service.hpp
+        runtime/timer/timer_service.cpp
         runtime/task_tracker/task_tracker.hpp
         runtime/task_tracker/task_tracker.cpp
         runtime/executor_pool/executor_pool.hpp

@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCInconsistentNamingInspection"
 #pragma once
 
 #include <coroutine>
@@ -115,7 +113,7 @@ public:
 		}
 
 		typename A::ValueType await_resume() const noexcept {
-			awaitable.Value();
+			return awaitable.Value();
 		}
 	};
 
@@ -215,4 +213,3 @@ typename Task<T>::template AwaitableValuePromise<typename Task<U>::AwaitableTask
 }
 
 }
-#pragma clang diagnostic pop

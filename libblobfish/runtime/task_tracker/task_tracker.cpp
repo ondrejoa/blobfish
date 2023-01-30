@@ -18,6 +18,8 @@ task::TaskId TaskTracker::AddTask(TaskTracker::TaskPtr task) {
 		}
 	}
 	// TODO: terminate
+	std::cerr << "Task list full" << std::endl;
+	std::terminate();
 }
 
 void TaskTracker::MarkAsReady(task::TaskId id) {
@@ -33,7 +35,7 @@ void TaskTracker::MarkForRemove(task::TaskId id) {
 
 std::optional<TaskTracker::TaskPtr> TaskTracker::NextReady() {
 	ready_count_.acquire();
-	std::scoped_lock lock(tasks_mutex_, ready_mutex_); // Az elso lock nem kotelezo
+	std::scoped_lock lock(tasks_mutex_, ready_mutex_);
 	for (auto id: ready_) {
 		ready_.erase(id); // ehh
 		return tasks_[size_t(id)];
